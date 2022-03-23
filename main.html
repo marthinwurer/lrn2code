@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>ACE in Action</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.1/brython.js" integrity="sha512-bF2SeYie9u0aV7LMuK2lWGVKgakWUjZrsTSP/8RQn1xSjIJO87QQbqfK7al5JKNnIhgR6DY10qiRnFb1OeqQ2Q==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.1/brython_stdlib.js" integrity="sha512-wYP7mTZHsGAGcwwof7CHkCfHXBNhpqpfQbnNaWCCzfba1QWl81KNhG5FmPGfcRPPtV0fmFCJSfmq0KKO294mrQ==" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body onload="brython(1)">
+
+<table id="container" style="height: 600px;">
+    <tr>
+        <td>Code:</td>
+        <td></td>
+        <td>
+            <button id="run"> ▶ Run</button>
+        </td>
+    </tr>
+
+    <tr>
+        <td id="left">
+            <div id="editor" style="width:100%;">print("Hello World!")</div>
+        </td>
+        <td id="separator"></td>
+        <td id="right">
+            <textarea readonly id="console" autocomplete="off"></textarea>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            Python code editor uses <a href="https://ace.c9.io/" target="_blank">Ace</a>.
+        </td>
+        <td></td>
+        <td>
+        </td>
+    </tr>
+</table>
+
+<!--   <div id="editor">function foo(items) {
+var x = "All this is syntax highlighted";
+return x;
+}</div> -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfRdCpDxRCphenIiZ2ztLy3XQfCbQUSCuk8IudvNHxkRA3oUg6q0qejgN/qqyG1duv5Q==" crossorigin="anonymous"></script>
+<!--     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.1/brython.js" integrity="sha512-bF2SeYie9u0aV7LMuK2lWGVKgakWUjZrsTSP/8RQn1xSjIJO87QQbqfK7al5JKNnIhgR6DY10qiRnFb1OeqQ2Q==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.1/brython_stdlib.js" integrity="sha512-wYP7mTZHsGAGcwwof7CHkCfHXBNhpqpfQbnNaWCCzfba1QWl81KNhG5FmPGfcRPPtV0fmFCJSfmq0KKO294mrQ==" crossorigin="anonymous"></script> -->
+
+
+
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/solarized_light");
+    editor.session.setMode("ace/mode/python");
+    editor.focus();
+    editor.setOptions({
+        'enableLiveAutocompletion': True,
+        'highlightActiveLine': False,
+        'highlightSelectedWord': True
+    })
+
+</script>
+<script type="text/python">
+
+import sys
+import time
+
+import tb as traceback
+import javascript
+
+from browser import document as doc, window, alert, bind, html
+
+#print("Hello World")
+
+# handle the printing to stdout
+class cOutput:
+    encoding = 'utf-8'
+
+    def __init__(self):
+        self.cons = doc["console"]
+        self.buf = ''
+
+    def write(self, data):
+        self.buf += str(data)
+
+    def flush(self):
+        self.cons.value += self.buf
+        self.buf = ''
+
+    def __len__(self):
+        return len(self.buf)
+
+if "console" in doc:
+    cOut = cOutput()
+    sys.stdout = cOut
+    sys.stderr = cOut
+    #print("Should be in console")
+
+output = ''
+
+def run_python(src):
+    #print("running")
+    global output
+    #doc["console"].value = ''
+    #if storage is not None:
+    #    pass
+    #    #storage["py_src"] = src
+    #print("running2")
+    t0 = time.perf_counter()
+    try:
+        ns = {'__name__':'__main__'}
+        exec(src, ns)
+        state = 1
+    except Exception as exc:
+        traceback.print_exc(file=sys.stderr)
+        state = 0
+    sys.stdout.flush()
+    output = doc["console"].value
+
+    print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
+    return state
+
+window.brythonRun = run_python
+
+</script>
+
+
+<script>
+    var code_prefix = "\nprint('in code prefix')\n";
+    var test_prefix = "\nprint('in test prefix')\n";
+    var tests = "";
+    var test_postfix = "\nprint('in test postfix')\n";
+    function run() {
+        var console = document.getElementById("console");
+        // console.value = "";
+
+        brythonRun(code_prefix + editor.getValue() + test_prefix + tests + test_postfix);
+    }
+
+    document.getElementById("run").addEventListener("click", run);
+</script>
+</body>
+</html>

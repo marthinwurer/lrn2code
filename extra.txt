@@ -1,0 +1,23 @@
+def hello():
+    return "hello world"
+
+
+class TestTracker:
+    def __init__(self):
+        self.count = 0
+
+    def assert_equals(self, a, b):
+        self.count += 1
+        result = a == b
+
+        if result:
+            print(f"Test {self.count} successful!")
+        else:
+            print(f"Test {self.count} failed:")
+            assert result, f'Expected: {b!r}, got {a!r} instead'
+
+Test = TestTracker()
+
+Test.assert_equals(hello(), "hello world")
+
+print("All tests complete")
